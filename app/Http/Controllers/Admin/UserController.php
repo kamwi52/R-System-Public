@@ -32,10 +32,13 @@ class UserController extends Controller
             });
         }
 
-        // Paginate the results (either all users or the filtered search results).
-        $users = $query->latest()->paginate(10);
+        $perPageOptions = [10, 25, 50, 100];
+        $perPage = $request->input('per_page', 10);
 
-        return view('admin.users.index', compact('users'));
+        // Paginate the results (either all users or the filtered search results).
+        $users = $query->latest()->paginate($perPage);
+
+        return view('admin.users.index', compact('users', 'perPageOptions', 'perPage'));
     }
 
     /**
@@ -112,6 +115,27 @@ class UserController extends Controller
 
         $user->delete();
         return to_route('admin.users.index')->with('success', 'User deleted successfully.');
+    }
+
+    /**
+     * Remove multiple resources from storage.
+     */
+    public function bulkDestroy(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:users,id',
+        ]);
+
+        // Filter out protected users (e.g., ID 1 and current user)
+        $ids = array_diff($request->ids, [1, auth()->id()]);
+
+        if (!empty($ids)) {
+            User::whereIn('id', $ids)->delete();
+            return back()->with('success', 'Selected users deleted successfully.');
+        }
+
+        return back()->with('error', 'No valid users selected for deletion.');
     }
 
     /**

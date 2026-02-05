@@ -81,6 +81,7 @@ Route::middleware(['auth', 'is.admin'])->prefix('admin')->name('admin.')->group(
     // User Management
     Route::get('/users/import', [UserController::class, 'showImportForm'])->name('users.import.show');
     Route::post('/users/import', [UserController::class, 'handleImport'])->name('users.import.handle');
+    Route::delete('/users/bulk-destroy', [UserController::class, 'bulkDestroy'])->name('users.bulk-destroy');
     Route::resource('users', UserController::class);
 
     // Subject Management

@@ -11,6 +11,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\ReportCardController;
+use App\Http\Controllers\ClassController;
 
 // Admin Controllers
 use App\Http\Controllers\Admin\DashboardController;
@@ -71,6 +72,13 @@ Route::middleware('auth')->group(function () {
         if (Storage::disk('private')->exists($filePath)) { return Storage::disk('private')->download($filePath); }
         abort(404, 'File not found or has been removed.');
     })->name('reports.download.generated');
+
+    // Shared Class Management Routes
+    Route::get('classes/{class}/enroll', [ClassController::class, 'enroll'])->name('classes.enroll');
+    Route::post('classes/{class}/enroll', [ClassController::class, 'storeEnrollment'])->name('classes.enroll.store');
+    Route::delete('classes/{class}/students/{student}', [ClassController::class, 'removeStudent'])->name('classes.students.remove');
+    Route::get('classes/{class}/students', [ClassController::class, 'students'])->name('classes.students');
+    Route::resource('classes', ClassController::class);
 });
 
 // Admin Routes

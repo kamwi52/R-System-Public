@@ -114,26 +114,31 @@ class ReportCardController extends Controller
         $rankedStudents = collect();
 
         foreach ($classSection->students as $student) {
-            // Calculate the total score for the current student.
-            $totalScore = $student->results->sum('score');
-            
-            // Add the student and their calculated data to our new collection.
+            // Calculate total score and prepare data
             $rankedStudents->push([
                 'student' => $student,
-                'total_score' => $totalScore
+                'total_score' => $student->results->sum('score')
             ]);
         }
 
-        // Sort the collection by total_score in descending order (highest score first).
-        // The values() method re-indexes the collection from 0 after sorting.
-        $sortedStudents = $rankedStudents->sortByDesc('total_score')->values();
+        // Sort by total_score descending
+        $sortedStudents = $rankedStudents->sortByDesc('total_score');
 
-        // Now, map over the sorted collection to add the rank.
-        $finalStudentData = $sortedStudents->map(function ($studentData, $key) {
-            // The rank is the array index (key) + 1.
-            $studentData['rank'] = $key + 1;
-            return $studentData;
-        });
+        // Assign ranks with tie handling (Standard Competition Ranking: 1, 1, 3)
+        $finalStudentData = collect();
+        $rank = 1;
+        $prevScore = null;
+        $count = 0;
+
+        foreach ($sortedStudents as $studentData) {
+            $count++;
+            if ($prevScore !== null && $studentData['total_score'] < $prevScore) {
+                $rank = $count;
+            }
+            $studentData['rank'] = $rank;
+            $finalStudentData->push($studentData);
+            $prevScore = $studentData['total_score'];
+        }
         // --- End of Ranking Logic ---
 
         // Prepare the final data array to pass to the class-wide report view.

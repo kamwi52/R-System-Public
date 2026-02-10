@@ -1,58 +1,63 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Teacher Dashboard') }}
-        </h2>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mb-6">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
-                    <h3 class="text-2xl font-bold">Welcome, {{ Auth::user()->name }}!</h3>
-                    <p class="mt-2 text-gray-600 dark:text-gray-400">
-                        Select a subject from your assignments below to manage student results and print marks summaries.
-                    </p>
+@section('title', 'Teacher Dashboard')
+
+@section('content')
+    <div class="dashboard-welcome">
+        <h1>Hello, {{ Auth::user()->name }}</h1>
+        <p>Select a subject below to manage assessments and grades.</p>
+    </div>
+
+    @if($assignedClasses->isEmpty())
+        <div class="card" style="padding: 40px; text-align: center;">
+            <div style="color: #9ca3af; font-size: 4rem; margin-bottom: 20px;">
+                <i class="fas fa-chalkboard-teacher"></i>
+            </div>
+            <h3>No Subjects Assigned</h3>
+            <p style="color: #6b7280;">You have not been assigned to any classes yet. Please contact the administrator.</p>
+        </div>
+    @else
+        <div class="stats-grid">
+            @foreach($assignedClasses as $class)
+                @foreach($class->subjects as $subject)
+                    <div class="stat-card" style="display: block; position: relative; overflow: hidden;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                            <div class="icon-wrapper icon-blue" style="margin: 0;">
+                                <i class="fas fa-book"></i>
+                            </div>
+                            <span style="background: #eff6ff; color: #1d4ed8; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600;">
+                                {{ $class->academicSession->name ?? 'Session N/A' }}
+                            </span>
+                        </div>
+                        
+                        <h3 style="font-size: 1.1rem; color: #111827; margin-bottom: 5px; font-weight: 700;">
+                            {{ $subject->name }}
+                        </h3>
+                        <p style="color: #6b7280; font-size: 0.9rem; margin-bottom: 20px;">
+                            {{ $class->name }} &bull; {{ $class->students->count() }} Students
+                        </p>
+
+                        <div style="border-top: 1px solid #f3f4f6; padding-top: 15px; display: flex; gap: 10px;">
+                            <a href="{{ route('teacher.gradebook.assessments', [$class->id, $subject->id]) }}" class="btn-primary" style="flex: 1; justify-content: center; font-size: 0.85rem;">
+                                <i class="fas fa-edit"></i> Gradebook
+                            </a>
+                        </div>
+                    </div>
+                @endforeach
+            @endforeach
+        </div>
+    @endif
+
+    <div style="margin-top: 40px;">
+        <h3 style="margin-bottom: 20px; color: #374151;">Quick Stats</h3>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-content">
+                    <h3>Total Classes</h3>
+                    <p class="number">{{ $assignedClasses->count() }}</p>
                 </div>
             </div>
-            
-            <h3 class="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4">My Teaching Assignments</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                @forelse ($assignedClasses as $class)
-                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg flex flex-col">
-                        <div class="p-6 flex-grow">
-                            <h4 class="text-lg font-bold text-gray-900 dark:text-gray-100">
-                                {{ $class->name }}
-                            </h4>
-                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                                {{ $class->students_count }} {{ Str::plural('Student', $class->students_count) }}
-                            </p>
-                            <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
-                                <h5 class="text-md font-semibold text-gray-800 dark:text-gray-200 mb-2">My Subjects in this Class:</h5>
-                                <ul class="space-y-3">
-                                    @foreach ($class->subjects as $subject)
-                                        <li class="flex justify-between items-center bg-gray-50 dark:bg-gray-700/50 p-3 rounded-md">
-                                            <span class="text-gray-900 dark:text-gray-100">{{ $subject->name }}</span>
-                                            
-                                            <a href="{{ route('teacher.gradebook.assessments', ['classSection' => $class, 'subject' => $subject]) }}"
-                                               class="inline-flex items-center px-3 py-1 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700">
-                                                View Gradebook
-                                            </a>
-                                        </li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        </div>
-                        {{-- === FIX: The entire "Generate Reports" button/link section has been removed === --}}
-                    </div>
-                @empty
-                    <div class="md:col-span-2 bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                         <div class="p-6 text-center text-gray-500">
-                            You are not currently assigned to any subjects. Please contact an administrator.
-                        </div>
-                    </div>
-                @endforelse
-            </div>
+            <!-- Additional stats can be added here -->
         </div>
     </div>
-</x-app-layout>
+@endsection

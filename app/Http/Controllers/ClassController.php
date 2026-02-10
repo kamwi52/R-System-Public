@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ClassSection;
 use App\Models\AcademicSession;
 use App\Models\User;
+use App\Models\Subject;
 use Illuminate\Http\Request;
 
 class ClassController extends Controller
@@ -104,5 +105,38 @@ class ClassController extends Controller
     {
         User::where('id', $studentId)->where('class_section_id', $classId)->update(['class_section_id' => null]);
         return redirect()->back()->with('success', 'Student removed from class.');
+    }
+
+    public function subjects($id)
+    {
+        $classSection = ClassSection::with('subjects')->findOrFail($id);
+        $allSubjects = Subject::orderBy('name')->get();
+        $teachers = User::where('role', 'teacher')->orderBy('name')->get();
+        
+        return view('classes.subjects', compact('classSection', 'allSubjects', 'teachers'));
+    }
+
+    public function storeSubject(Request $request, $id)
+    {
+        $request->validate([
+            'subject_id' => 'required|exists:subjects,id',
+            'teacher_id' => 'required|exists:users,id',
+        ]);
+
+        $classSection = ClassSection::findOrFail($id);
+        
+        // Sync without detaching ensures we don't duplicate if it exists, but we want to update the teacher if it does.
+        $classSection->subjects()->syncWithoutDetaching([
+            $request->subject_id => ['teacher_id' => $request->teacher_id]
+        ]);
+
+        return redirect()->route('classes.subjects', $id)->with('success', 'Subject assigned successfully.');
+    }
+
+    public function removeSubject($classId, $subjectId)
+    {
+        $classSection = ClassSection::findOrFail($classId);
+        $classSection->subjects()->detach($subjectId);
+        return redirect()->back()->with('success', 'Subject removed from class.');
     }
 }

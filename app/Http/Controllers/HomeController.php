@@ -34,7 +34,7 @@ class HomeController extends Controller
         // Check the user's role and redirect accordingly.
         if ($user->role === 'admin') {
             // Admins are redirected to the user management page.
-            return redirect()->route('admin.users.index');
+            return redirect()->route('admin.dashboard');
         }
 
         if ($user->role === 'teacher') {

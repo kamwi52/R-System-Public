@@ -1,62 +1,47 @@
-{{--
-|--------------------------------------------------------------------------
-| Admin Subject Edit View (Tailwind CSS / Breeze Component Structure)
-|--------------------------------------------------------------------------
-|
-| This file defines the form for editing an existing Subject, using the
-| Tailwind CSS and Laravel Breeze component architecture.
-|
---}}
-
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Edit Subject') }}
-        </h2>
-    </x-slot>
-
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 bg-white border-b border-gray-200">
-                    {{-- Display Validation Errors --}}
-                    {{-- Ensure you have the 'validation-errors.blade.php' component in resources/views/components --}}
-                    <x-validation-errors class="mb-4" />
-
-                    {{-- Form to update the subject. Uses PUT method. --}}
-                    <form method="POST" action="{{ route('admin.subjects.update', $subject->id) }}">
-                        @csrf {{-- CSRF token for security --}}
-                        @method('PUT') {{-- Use the PUT method for updates --}}
-
-                        {{-- Name Field --}}
-                        <div>
-                            {{-- Using the standard 'label.blade.php' or 'input-label.blade.php' component --}}
-                            <x-label for="name" value="{{ __('Subject Name') }}" />
-                            {{-- Using the standard 'text-input.blade.php' component --}}
-                            <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name', $subject->name)" required autofocus />
-                        </div>
-
-                        {{-- Code Field --}}
-                         <div class="mt-4">
-                            <x-label for="code" value="{{ __('Subject Code') }}" />
-                             <x-text-input id="code" class="block mt-1 w-full" type="text" name="code" :value="old('code', $subject->code)" required />
-                        </div>
-
-                        <div class="flex items-center justify-end mt-4">
-                            {{-- Standard anchor tag for Cancel button --}}
-                            <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('admin.subjects.index') }}">
-                                {{ __('Cancel') }}
-                            </a>
-
-                            {{-- Primary Button component for the submit button --}}
-                            {{-- Ensure you have the 'primary-button.blade.php' component in resources/views/components --}}
-                            <x-primary-button class="ms-4">
-                                {{ __('Save Subject') }}
-                            </x-primary-button>
-                        </div>
-                    </form>
+@extends('layouts.app')
+@section('title', 'Edit Subject')
+@section('content')
+<div style="max-width: 600px; margin: 0 auto;">
+    <div class="card">
+        <div class="card-header">
+            <h3>Edit Subject: {{ $subject->name }}</h3>
+        </div>
+        <div class="content-body">
+            <form action="{{ route('admin.subjects.update', $subject->id) }}" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="form-group">
+                    <label class="form-label">Subject Name</label>
+                    <input type="text" name="name" class="form-control" value="{{ $subject->name }}" required>
                 </div>
-            </div>
+                <div class="form-group">
+                    <label class="form-label">Subject Code</label>
+                    <input type="text" name="code" class="form-control" value="{{ $subject->code }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea name="description" class="form-control" rows="3">{{ $subject->description }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Assign Teachers</label>
+                    <div style="max-height: 200px; overflow-y: auto; border: 1px solid #d1d5db; padding: 10px; border-radius: 6px;">
+                        @foreach($teachers as $teacher)
+                            <div style="margin-bottom: 5px;">
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                    <input type="checkbox" name="teachers[]" value="{{ $teacher->id }}" 
+                                        {{ $subject->teachers->contains($teacher->id) ? 'checked' : '' }}>
+                                    {{ $teacher->name }}
+                                </label>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <a href="{{ route('admin.subjects.index') }}" class="btn-secondary">Cancel</a>
+                    <button type="submit" class="btn-primary">Update Subject</button>
+                </div>
+            </form>
         </div>
     </div>
-</x-app-layout>
+</div>
+@endsection

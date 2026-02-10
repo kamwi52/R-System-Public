@@ -1,112 +1,56 @@
-<x-app-flowbite-layout>
-    {{-- Page Header --}}
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Academic Session Management') }}
-        </h2>
-    </x-slot>
-
-    {{-- Main Content --}}
-    <div class="py-2">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            
-            {{-- Action Buttons --}}
-            <div class="flex items-center justify-end mb-4">
-                <a href="{{ route('admin.academic-sessions.create') }}" class="focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">
-                    Add New Session
-                </a>
-            </div>
-
-            {{-- Success/Error Messages --}}
-            @if (session('success'))
-                <div id="alert-3" class="flex items-center p-4 mb-4 text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400" role="alert">
-                    <svg class="flex-shrink-0 w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
-                    </svg>
-                    <span class="sr-only">Info</span>
-                    <div class="ms-3 text-sm font-medium">
-                        {{ session('success') }}
-                    </div>
-                    <button type="button" class="ms-auto -mx-1.5 -my-1.5 bg-green-50 text-green-500 rounded-lg focus:ring-2 focus:ring-green-400 p-1.5 hover:bg-green-200 inline-flex items-center justify-center h-8 w-8 dark:bg-gray-800 dark:text-green-400 dark:hover:bg-gray-700" data-dismiss-target="#alert-3" aria-label="Close">
-                        <span class="sr-only">Close</span>
-                        <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
-                        </svg>
-                    </button>
-                </div>
-            @endif
-             @if (session('error'))
-                <div id="alert-2" class="flex items-center p-4 mb-4 text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
-                    <svg class="flex-shrink-0 w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
-                    </svg>
-                    <span class="sr-only">Info</span>
-                    <div class="ms-3 text-sm font-medium">
-                        {{ session('error') }}
-                    </div>
-                    <button type="button" class="ms-auto -mx-1.5 -my-1.5 bg-red-50 text-red-500 rounded-lg focus:ring-2 focus:ring-red-400 p-1.5 hover:bg-red-200 inline-flex items-center justify-center h-8 w-8 dark:bg-gray-800 dark:text-red-400 dark:hover:bg-gray-700" data-dismiss-target="#alert-2" aria-label="Close">
-                        <span class="sr-only">Close</span>
-                        <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
-                        </svg>
-                    </button>
-                </div>
-            @endif
-
-            {{-- Academic Sessions Table --}}
-            <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
-                <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                        <tr>
-                            <th scope="col" class="px-6 py-3">Name</th>
-                            <th scope="col" class="px-6 py-3">Start Date</th>
-                            <th scope="col" class="px-6 py-3">End Date</th>
-                            <th scope="col" class="px-6 py-3">Current</th>
-                            <th scope="col" class="px-6 py-3"><span class="sr-only">Actions</span></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($academicSessions as $session)
-                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                    {{ $session->name }}
-                                </th>
-                                <td class="px-6 py-4">{{ $session->start_date->format('Y-m-d') }}</td>
-                                <td class="px-6 py-4">{{ $session->end_date->format('Y-m-d') }}</td>
-                                <td class="px-6 py-4">
-                                    @if ($session->is_current)
-                                        <span class="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-full dark:bg-green-900 dark:text-green-300">Yes</span>
-                                    @else
-                                        <span class="bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-full dark:bg-gray-700 dark:text-gray-300">No</span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 text-right">
-                                    <div class="flex justify-end items-center space-x-4">
-                                        <a href="{{ route('admin.academic-sessions.edit', $session) }}" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">Edit</a>
-                                        <form action="{{ route('admin.academic-sessions.destroy', $session) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this academic session?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="font-medium text-red-600 dark:text-red-500 hover:underline">Delete</button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr class="bg-white border-b dark:bg-gray-800">
-                                <td colspan="5" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
-                                    No academic sessions found.
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
-            {{-- Pagination Links --}}
-            <div class="mt-4">
-                {{ $academicSessions->links() }}
-            </div>
-
-        </div>
+@extends('layouts.app')
+@section('title', 'Academic Sessions')
+@section('content')
+<div class="card">
+    <div class="card-header">
+        <h3>Academic Sessions</h3>
+        <a href="{{ route('admin.academic-sessions.create') }}" class="btn-primary">
+            <i class="fas fa-plus"></i> Add Session
+        </a>
     </div>
-</x-app-flowbite-layout>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Duration</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($academicSessions as $session)
+                <tr>
+                    <td>
+                        <div style="font-weight: 600; color: #111827;">{{ $session->name }}</div>
+                    </td>
+                    <td>
+                        {{ \Carbon\Carbon::parse($session->start_date)->format('M Y') }} - 
+                        {{ \Carbon\Carbon::parse($session->end_date)->format('M Y') }}
+                    </td>
+                    <td>
+                        @if($session->is_current)
+                            <span style="background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 99px; font-size: 12px; font-weight: 600;">Current Session</span>
+                        @else
+                            <span style="background: #f3f4f6; color: #6b7280; padding: 2px 8px; border-radius: 99px; font-size: 12px; font-weight: 600;">Inactive</span>
+                        @endif
+                    </td>
+                    <td>
+                        <a href="{{ route('admin.academic-sessions.edit', $session->id) }}" class="action-btn" title="Edit"><i class="fas fa-edit"></i></a>
+                        <form action="{{ route('admin.academic-sessions.destroy', $session->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete this session? Warning: This may affect linked classes.');">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="action-btn" style="background:none;border:none;cursor:pointer;color:#ef4444;"><i class="fas fa-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                @empty
+                <tr><td colspan="4" style="text-align: center; padding: 30px;">No academic sessions found.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+    <div style="padding: 20px;">
+        {{ $academicSessions->links() }}
+    </div>
+</div>
+@endsection

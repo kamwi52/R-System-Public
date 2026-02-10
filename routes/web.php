@@ -2,14 +2,12 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Notifications\DatabaseNotification;
 
 // Import all controllers
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\ReportCardController;
 use App\Http\Controllers\ClassController;
 
@@ -26,6 +24,7 @@ use App\Http\Controllers\Admin\ResultController as AdminResultController;
 use App\Http\Controllers\Admin\GradingScaleController;
 use App\Http\Controllers\Admin\AcademicSessionController;
 use App\Http\Controllers\Admin\TermController;
+use App\Http\Controllers\Admin\PromotionController;
 
 // Teacher Controllers
 use App\Http\Controllers\Teacher\DashboardController as TeacherDashboardController;
@@ -45,20 +44,19 @@ use App\Http\Controllers\Student\DashboardController as StudentDashboardControll
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return auth()->check() ? redirect()->route('home') : view('welcome');
 });
 
-Auth::routes();
-
-Route::get('/home', [HomeController::class, 'index'])->name('home');
-Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
-
 Route::middleware('auth')->group(function () {
+    Route::get('/home', [HomeController::class, 'index'])->name('home');
+    Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::get('/notifications/{notification}', function (DatabaseNotification $notification) {
+        abort_if($notification->notifiable_id != auth()->id(), 403);
         $notification->markAsRead();
         if (isset($notification->data['action_url']) && $notification->data['action_url']) {
             return redirect($notification->data['action_url']);
@@ -73,12 +71,6 @@ Route::middleware('auth')->group(function () {
         abort(404, 'File not found or has been removed.');
     })->name('reports.download.generated');
 
-    // Shared Class Management Routes
-    Route::get('classes/{class}/enroll', [ClassController::class, 'enroll'])->name('classes.enroll');
-    Route::post('classes/{class}/enroll', [ClassController::class, 'storeEnrollment'])->name('classes.enroll.store');
-    Route::delete('classes/{class}/students/{student}', [ClassController::class, 'removeStudent'])->name('classes.students.remove');
-    Route::get('classes/{class}/students', [ClassController::class, 'students'])->name('classes.students');
-    Route::resource('classes', ClassController::class);
 });
 
 // Admin Routes
@@ -86,6 +78,16 @@ Route::middleware(['auth', 'is.admin'])->prefix('admin')->name('admin.')->group(
     // === FIX: The admin dashboard route now points to the new DashboardController ===
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     
+    // Shared Class Management Routes
+    Route::get('classes/{class}/enroll', [ClassController::class, 'enroll'])->name('classes.enroll');
+    Route::post('classes/{class}/enroll', [ClassController::class, 'storeEnrollment'])->name('classes.enroll.store');
+    Route::delete('classes/{class}/students/{student}', [ClassController::class, 'removeStudent'])->name('classes.students.remove');
+    Route::get('classes/{class}/students', [ClassController::class, 'students'])->name('classes.students');
+    Route::get('classes/{class}/subjects', [ClassController::class, 'subjects'])->name('classes.subjects');
+    Route::post('classes/{class}/subjects', [ClassController::class, 'storeSubject'])->name('classes.subjects.store');
+    Route::delete('classes/{class}/subjects/{subject}', [ClassController::class, 'removeSubject'])->name('classes.subjects.remove');
+    Route::resource('classes', ClassController::class);
+});
     // User Management
     Route::get('/users/import', [UserController::class, 'showImportForm'])->name('users.import.show');
     Route::post('/users/import', [UserController::class, 'handleImport'])->name('users.import.handle');
@@ -99,10 +101,12 @@ Route::middleware(['auth', 'is.admin'])->prefix('admin')->name('admin.')->group(
     Route::get('/classes/{classSection}/subjects', [ClassSectionController::class, 'getSubjectsJson'])->name('classes.subjects.json');
     Route::get('/classes/import', [ClassSectionController::class, 'showImportForm'])->name('classes.import.show');
     Route::post('/classes/import', [ClassSectionController::class, 'handleImport'])->name('classes.import.handle');
+    Route::get('/classes/{classSection}/assign-teachers', [ClassSectionController::class, 'assignTeachers'])->name('classes.teachers.assign');
+    Route::post('/classes/{classSection}/assign-teachers', [ClassSectionController::class, 'storeTeacherAssignments'])->name('classes.teachers.store');
     Route::resource('classes', ClassSectionController::class)->parameters(['classes' => 'classSection']);
 
     // Enrollment Management
-    Route::match(['get', 'post'], '/enrollments/bulk-manage', [EnrollmentController::class, 'showBulkManageForm'])->name('enrollments.bulk-manage.show');
+    Route::get('/enrollments/bulk-manage', [EnrollmentController::class, 'showBulkManageForm'])->name('enrollments.bulk-manage.show');
     Route::post('/enrollments/bulk-save', [EnrollmentController::class, 'handleBulkManage'])->name('enrollments.bulk-manage.handle');
     Route::get('classes/{classSection}/enroll', [EnrollmentController::class, 'index'])->name('classes.enroll.index');
     Route::post('classes/{classSection}/enroll', [EnrollmentController::class, 'store'])->name('classes.enroll.store');
@@ -111,6 +115,8 @@ Route::middleware(['auth', 'is.admin'])->prefix('admin')->name('admin.')->group(
     Route::get('assessments/bulk-create', [AssessmentController::class, 'showBulkCreateForm'])->name('assessments.bulk-create.show');
     Route::post('assessments/bulk-create', [AssessmentController::class, 'handleBulkCreate'])->name('assessments.bulk-create.handle');
     Route::resource('assessments', AssessmentController::class);
+    Route::get('results/import', [AdminResultController::class, 'showImportForm'])->name('results.import.show');
+    Route::post('results/import', [AdminResultController::class, 'handleImport'])->name('results.import.handle');
     Route::resource('results', AdminResultController::class);
 
     // Settings Management
@@ -119,20 +125,29 @@ Route::middleware(['auth', 'is.admin'])->prefix('admin')->name('admin.')->group(
     Route::resource('terms', TermController::class);
 
     // Reporting Management
+    Route::get('/reporting', [ReportingController::class, 'index'])->name('reporting.index');
+
     Route::prefix('final-reports')->name('final-reports.')->group(function() {
         Route::get('/', [FinalReportController::class, 'index'])->name('index');
         Route::get('/show-students', [FinalReportController::class, 'showStudents'])->name('show-students');
         Route::post('/generate', [FinalReportController::class, 'generate'])->name('generate');
         Route::get('/generate-single/{student_id}/{class_id}/{term_id}', [FinalReportController::class, 'generateSingle'])->name('generate-single');
     });
-});
 
+    // Promotion Management
+    Route::prefix('promotions')->name('promotions.')->group(function() {
+        Route::get('/', [PromotionController::class, 'index'])->name('index');
+        Route::get('/get-students', [PromotionController::class, 'getStudents'])->name('get-students');
+        Route::post('/promote', [PromotionController::class, 'promote'])->name('promote');
+    });
+});
 // Teacher Routes
 Route::middleware(['auth', 'is.teacher'])->prefix('teacher')->name('teacher.')->group(function () {
     Route::get('/dashboard', [TeacherDashboardController::class, 'index'])->name('dashboard');
     
     // New Streamlined Gradebook Workflow
     Route::get('/gradebook/{classSection}/{subject}/edit', [GradebookController::class, 'findAndEditLatestAssessment'])->name('gradebook.find-and-edit');
+
     Route::get('/gradebook/{assessment}/results', [GradebookController::class, 'showResults'])->name('gradebook.results');
     Route::post('/gradebook/{assessment}/results', [GradebookController::class, 'storeResults'])->name('gradebook.results.store');
     
@@ -140,6 +155,20 @@ Route::middleware(['auth', 'is.teacher'])->prefix('teacher')->name('teacher.')->
     Route::get('/gradebook/{classSection}/{subject}', [GradebookController::class, 'showAssessments'])->name('gradebook.assessments');
     Route::post('/gradebook/{assessment}/results/import', [GradebookController::class, 'handleResultsImport'])->name('gradebook.results.import');
     Route::get('/gradebook/{assessment}/summary/print', [GradebookController::class, 'printSummary'])->name('gradebook.summary.print');
+
+    // Bulk Grading
+    Route::get('/bulk-grades', [BulkGradeController::class, 'index'])->name('bulk-grades.index');
+    Route::post('/bulk-grades', [BulkGradeController::class, 'store'])->name('bulk-grades.store');
+
+    // Assignments
+    Route::resource('assignments', AssignmentController::class);
+
+    // Results Management
+    Route::resource('results', TeacherResultController::class);
+
+    // Report Cards
+    Route::get('/report-cards', [TeacherReportCardController::class, 'index'])->name('report-cards.index');
+    Route::get('/report-cards/{student}', [TeacherReportCardController::class, 'show'])->name('report-cards.show');
 });
 
 // Student Routes
@@ -148,3 +177,6 @@ Route::middleware(['auth', 'is.student'])->prefix('student')->name('student.')->
     Route::get('/classes/{classSection}/results', [StudentDashboardController::class, 'showResults'])->name('class.results');
     Route::get('/my-report', [ReportCardController::class, 'generateForStudent'])->name('my.report');
 });
+
+
+require __DIR__.'/auth.php';

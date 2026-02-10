@@ -201,4 +201,32 @@ class ClassSectionController extends Controller
     {
         return response()->json($classSection->subjects()->orderBy('name')->get());
     }
+
+    /**
+     * Show the form to assign teachers to subjects for a specific class.
+     */
+    public function assignTeachers(ClassSection $classSection): View
+    {
+        $classSection->load(['subjects', 'academicSession']);
+        $teachers = User::where('role', 'teacher')->orderBy('name')->get();
+        return view('admin.classes.assign-teachers', compact('classSection', 'teachers'));
+    }
+
+    /**
+     * Store the teacher assignments for the class subjects.
+     */
+    public function storeTeacherAssignments(Request $request, ClassSection $classSection)
+    {
+        $validated = $request->validate([
+            'assignments' => 'array',
+            'assignments.*' => 'nullable|exists:users,id',
+        ]);
+
+        if ($request->has('assignments')) {
+            foreach ($request->assignments as $subjectId => $teacherId) {
+                $classSection->subjects()->updateExistingPivot($subjectId, ['teacher_id' => $teacherId]);
+            }
+        }
+        return redirect()->route('admin.classes.index')->with('success', 'Teachers assigned successfully.');
+    }
 }

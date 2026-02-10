@@ -1,98 +1,42 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Add New Result') }}
-        </h2>
-    </x-slot>
-
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-
-                    @if ($errors->any())
-                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4"
-                            role="alert">
-                            <strong class="font-bold">Error!</strong>
-                            <span class="block sm:inline">{{ $errors->first('message') }}</span>
-                        </div>
-                    @endif
-
-                    <form method="POST" action="{{ route('admin.results.store') }}">
-                        @csrf
-
-                        <!-- Student -->
-                        <div class="mb-4">
-                            <label for="user_id" class="block text-sm font-medium text-gray-700">Student</label>
-                            <select id="user_id" name="user_id" required
-                                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                                <option value="">Select a student</option>
-                                @foreach ($students as $student)
-                                    <option value="{{ $student->id }}"
-                                        {{ old('user_id') == $student->id ? 'selected' : '' }}>
-                                        {{ $student->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('user_id')
-                                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <!-- Assessment -->
-                        <div class="mb-4">
-                            <label for="assessment_id" class="block text-sm font-medium text-gray-700">Assessment</label>
-                            <select id="assessment_id" name="assessment_id" required
-                                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                                <option value="">Select an assessment</option>
-                                @foreach ($assessments as $assessment)
-                                    <option value="{{ $assessment->id }}"
-                                        {{ old('assessment_id') == $assessment->id ? 'selected' : '' }}>
-                                        {{ $assessment->name }} (Subject:
-                                        {{ $assessment->subject->name ?? 'N/A' }}, Class:
-                                        {{ $assessment->classSection->name ?? 'N/A' }})
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('assessment_id')
-                                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <!-- Score -->
-                        <div class="mb-4">
-                            <label for="score" class="block text-sm font-medium text-gray-700">Score (%)</label>
-                            <input type="number" name="score" id="score" value="{{ old('score') }}"
-                                required
-                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                min="0">
-                            @error('score')
-                                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <!-- Remark -->
-                        <div class="mb-4">
-                            <label for="comments" class="block text-sm font-medium text-gray-700">Remark (Auto-generated)</label>
-                            <input type="text" name="comments" id="comments" value="Result is required"
-                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                maxlength="1000" readonly>
-                            @error('comments')
-                                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div class="flex items-center justify-end mt-4">
-                            <a href="{{ route('admin.results.index') }}"
-                                class="text-gray-600 hover:text-gray-900 mr-4">Cancel</a>
-                            <button type="submit"
-                                class="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700">
-                                Save Result
-                            </button>
-                        </div>
-                    </form>
+@extends('layouts.app')
+@section('title', 'Add Result')
+@section('content')
+<div style="max-width: 600px; margin: 0 auto;">
+    <div class="card">
+        <div class="card-header">
+            <h3>Add Student Result</h3>
+        </div>
+        <div class="content-body">
+            <form action="{{ route('admin.results.store') }}" method="POST">
+                @csrf
+                <div class="form-group">
+                    <label class="form-label">Assessment</label>
+                    <select name="assessment_id" class="form-control" required>
+                        <option value="">Select Assessment...</option>
+                        @foreach($assessments as $assessment)
+                            <option value="{{ $assessment->id }}">{{ $assessment->name }} ({{ $assessment->classSection->name ?? 'N/A' }})</option>
+                        @endforeach
+                    </select>
                 </div>
-            </div>
+                <div class="form-group">
+                    <label class="form-label">Student</label>
+                    <select name="student_id" class="form-control" required>
+                        <option value="">Select Student...</option>
+                        @foreach($students as $student)
+                            <option value="{{ $student->id }}">{{ $student->name }} ({{ $student->classSection->name ?? 'N/A' }})</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Score</label>
+                    <input type="number" name="score" class="form-control" step="0.01" required>
+                </div>
+                <div class="form-actions">
+                    <a href="{{ route('admin.results.index') }}" class="btn-secondary">Cancel</a>
+                    <button type="submit" class="btn-primary">Save Result</button>
+                </div>
+            </form>
         </div>
     </div>
-</x-app-layout>
+</div>
+@endsection

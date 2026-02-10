@@ -3,86 +3,170 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Jobs\GenerateRankedReportJob;
-use App\Models\Term;
+use App\Models\AcademicSession;
 use App\Models\ClassSection;
+use App\Models\Term;
+use App\Models\User;
+use App\Models\Result;
+use App\Models\Assessment;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class FinalReportController extends Controller
 {
-    /**
-     * Step 1: Display the main selection page.
-     */
     public function index()
     {
-        $classes = ClassSection::with('academicSession')->orderBy('name')->get();
-        $terms = Term::orderBy('name')->get(); 
-        return view('admin.final-reports.index', compact('classes', 'terms'));
+        $sessions = AcademicSession::orderBy('start_date', 'desc')->get();
+        $classes = ClassSection::orderBy('name')->get();
+        $terms = Term::all();
+
+        return view('admin.reports.index', compact('sessions', 'classes', 'terms'));
     }
 
-    /**
-     * Step 2: Show the student list for the selected class.
-     */
     public function showStudents(Request $request)
     {
-        $validated = $request->validate([
-            'class_id' => 'required|exists:class_sections,id',
-            'term_id'  => 'required|exists:terms,id',
-        ]);
-        
-        $classSection = ClassSection::findOrFail($validated['class_id']);
-        $term = Term::findOrFail($validated['term_id']); 
-        $students = $classSection->students()->select('users.id', 'users.name')->orderBy('users.name')->get();
-        
-        return view('admin.final-reports.show-students', compact('classSection', 'term', 'students'));
-    }
-
-    /**
-     * Step 3: Handle the BULK form submission and dispatch the job.
-     */
-    public function generate(Request $request)
-    {
-        $validated = $request->validate([
-            'student_ids' => 'required|array|min:1',
-            'student_ids.*' => 'required|exists:users,id',
-            'class_id'    => 'required|exists:class_sections,id',
-            'term_id'     => 'required|exists:terms,id',
+        $request->validate([
+            'academic_session_id' => 'required',
+            'class_section_id' => 'required',
+            'term_id' => 'required',
         ]);
 
-        GenerateRankedReportJob::dispatch(
-            $validated['student_ids'],
-            $validated['class_id'],
-            $validated['term_id'],
-            auth()->user()
-        );
-        
-        // === FIX: Return JSON for JavaScript requests, otherwise redirect ===
-        if ($request->wantsJson()) {
-            return response()->json(['message' => 'Your ranked report cards are being generated! You will be notified when they are ready.']);
-        }
+        $classSection = ClassSection::findOrFail($request->class_section_id);
+        $session = AcademicSession::findOrFail($request->academic_session_id);
+        $term = Term::findOrFail($request->term_id);
 
-        return redirect()->route('admin.final-reports.index')
-            ->with('success', 'Your ranked report cards are being generated! You will be notified when they are ready.');
+        // Get students in this class
+        $students = User::where('class_section_id', $classSection->id)
+                        ->where('role', 'student')
+                        ->orderBy('name')
+                        ->get();
+
+        return view('admin.reports.students', compact('students', 'classSection', 'session', 'term'));
     }
 
-    /**
-     * Step 3 (Single): Handle the single student generation link.
-     */
-    public function generateSingle(Request $request, int $student_id, int $class_id, int $term_id)
+    private function getReportData($student, $classSection, $term)
     {
-        GenerateRankedReportJob::dispatch(
-            [$student_id],
-            $class_id,
-            $term_id,
-            auth()->user()
-        );
+        $subjects = $classSection->subjects;
+        $reportData = [];
 
-        // === FIX: Return JSON for JavaScript requests, otherwise redirect ===
-        if ($request->wantsJson()) {
-            return response()->json(['message' => 'The report is being generated! You will be notified when it is ready.']);
+        foreach($subjects as $subject) {
+            // Get assessments for this subject, term, and class
+            $assessments = Assessment::where('subject_id', $subject->id)
+                            ->where('class_section_id', $classSection->id)
+                            ->where('term_id', $term->id)
+                            ->get();
+
+            $subjectTotal = 0;
+            $subjectMax = 0;
+            $assessmentDetails = [];
+
+            foreach($assessments as $assessment) {
+                $result = Result::where('assessment_id', $assessment->id)
+                                ->where('student_id', $student->id)
+                                ->first();
+                
+                $score = $result ? $result->score : 0;
+                // Only count max marks if the student was actually graded or if we assume 0 for missing
+                // For this report, we sum up max marks of all assessments defined for the class
+                $subjectTotal += $score;
+                $subjectMax += $assessment->max_marks;
+
+                $assessmentDetails[] = [
+                    'name' => $assessment->name,
+                    'score' => $score,
+                    'max' => $assessment->max_marks
+                ];
+            }
+
+            $percentage = $subjectMax > 0 ? ($subjectTotal / $subjectMax) * 100 : 0;
+            $grade = $this->calculateGrade($percentage);
+
+            $reportData[] = [
+                'subject' => $subject->name,
+                'code' => $subject->code,
+                'assessments' => $assessmentDetails,
+                'total_score' => $subjectTotal,
+                'max_score' => $subjectMax,
+                'percentage' => $percentage,
+                'grade' => $grade
+            ];
         }
 
-        return redirect()->route('admin.final-reports.show-students', ['class_id' => $class_id, 'term_id' => $term_id])
-            ->with('success', 'The report is being generated! You will be notified when it is ready.');
+        return $reportData;
+    }
+
+    public function generateSingle($studentId, $classId, $termId)
+    {
+        $student = User::findOrFail($studentId);
+        $classSection = ClassSection::with('subjects')->findOrFail($classId);
+        $term = Term::findOrFail($termId);
+        
+        // We use the class's session or the one passed implicitly via context. 
+        // For the report card, we usually display the session linked to the class.
+        $session = $classSection->academicSession; 
+
+        $reportData = $this->getReportData($student, $classSection, $term);
+
+        $pdf = Pdf::loadView('pdf.report-card', compact('student', 'classSection', 'term', 'reportData', 'session'));
+        return $pdf->stream('ReportCard_' . $student->name . '_' . $term->name . '.pdf');
+    }
+
+    private function calculateGrade($percentage)
+    {
+        // Basic grading logic - this could be replaced by a database lookup
+        if ($percentage >= 90) return 'A+';
+        if ($percentage >= 80) return 'A';
+        if ($percentage >= 70) return 'B';
+        if ($percentage >= 60) return 'C';
+        if ($percentage >= 50) return 'D';
+        return 'F';
+    }
+    
+    public function generate(Request $request) {
+        $request->validate([
+            'academic_session_id' => 'required',
+            'class_section_id' => 'required',
+            'term_id' => 'required',
+        ]);
+
+        if (!class_exists('ZipArchive')) {
+            return redirect()->back()->with('error', 'ZipArchive extension is not installed on the server.');
+        }
+
+        $classSection = ClassSection::with('subjects')->findOrFail($request->class_section_id);
+        $session = AcademicSession::findOrFail($request->academic_session_id);
+        $term = Term::findOrFail($request->term_id);
+
+        $students = User::where('class_section_id', $classSection->id)
+                        ->where('role', 'student')
+                        ->get();
+
+        if ($students->isEmpty()) {
+            return redirect()->back()->with('error', 'No students found to generate reports.');
+        }
+
+        $zipFileName = 'reports_' . \Str::slug($classSection->name) . '_' . \Str::slug($term->name) . '_' . time() . '.zip';
+        $zipFilePath = storage_path('app/public/' . $zipFileName);
+        
+        // Ensure directory exists
+        if (!file_exists(dirname($zipFilePath))) {
+            mkdir(dirname($zipFilePath), 0755, true);
+        }
+
+        $zip = new \ZipArchive;
+        if ($zip->open($zipFilePath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === TRUE) {
+            foreach ($students as $student) {
+                $reportData = $this->getReportData($student, $classSection, $term);
+                $pdf = Pdf::loadView('pdf.report-card', compact('student', 'classSection', 'term', 'reportData', 'session'));
+                $content = $pdf->output();
+                $fileName = \Str::slug($student->name) . '_' . $student->id . '.pdf';
+                $zip->addFromString($fileName, $content);
+            }
+            $zip->close();
+        } else {
+             return redirect()->back()->with('error', 'Could not create ZIP file.');
+        }
+
+        return response()->download($zipFilePath)->deleteFileAfterSend(true);
     }
 }

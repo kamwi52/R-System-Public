@@ -1,77 +1,67 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Assignments for ') }} {{ $classSection->name }} - {{ $subject->name }}
-        </h2>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
+@section('title', 'Gradebook - ' . $subject->name)
 
-                    {{-- ADD THIS BLOCK TO DISPLAY FLASH MESSAGES --}}
-                    @if(session('success'))
-                        <div class="mb-4 bg-green-100 border-l-4 border-green-500 text-green-700 p-4" role="alert">
-                            <p>{{ session('success') }}</p>
-                        </div>
-                    @endif
-                    @if(session('error'))
-                        <div class="mb-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4" role="alert">
-                            <p class="font-bold">Error!</p>
-                            <p>{{ session('error') }}</p>
-                        </div>
-                    @endif
-                    {{-- END FLASH MESSAGE BLOCK --}}
-
-                    <div class="mb-6 flex justify-end">
-                        <a href="{{ route('teacher.gradebook.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-200 dark:bg-gray-700 border border-transparent rounded-md font-semibold text-xs text-gray-700 dark:text-gray-200 uppercase tracking-widest hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:border-gray-900 focus:ring ring-gray-300 disabled:opacity-25 transition ease-in-out duration-150">
-                            Back to Classes
-                        </a>
-                    </div>
-
-                    @if($assignments->isEmpty())
-                        <p class="text-center text-gray-500 dark:text-gray-400">No assignments found for this class and subject.</p>
-                    @else
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                <thead class="bg-gray-50 dark:bg-gray-700">
-                                    <tr>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Assignment Name</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Assessment Type</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Max Score</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
-                                        <th scope="col" class="relative px-6 py-3">
-                                            <span class="sr-only">Actions</span>
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                    @foreach ($assignments as $assignment)
-                                        <tr>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{{ $assignment->title }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{{ $assignment->assessment->name ?? 'N/A' }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{{ $assignment->assessment->max_marks ?? 'N/A' }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{{ $assignment->assessment->assessment_date ?? 'N/A' }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                {{-- FIX #1: Changed route name for viewing results --}}
-                                                <a href="{{ route('teacher.assignments.results', $assignment) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-4">View Results</a>
-
-                                                {{-- FIX #2: Corrected route name for bulk editing --}}
-                                                <a href="{{ route('teacher.grades.bulk-edit', $assignment) }}" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300">Bulk Grade</a>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                        <div class="mt-4">
-                            {{ $assignments->links() }}
-                        </div>
-                    @endif
-
-                </div>
+@section('content')
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h3>{{ $subject->name }} <span style="color: #9ca3af; font-weight: normal;">/ {{ $classSection->name }}</span></h3>
+                <p style="margin: 0; color: #6b7280; font-size: 0.9rem;">Select an assessment to enter marks.</p>
             </div>
+            <a href="{{ route('teacher.dashboard') }}" class="btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Assessment Title</th>
+                        <th>Type</th>
+                        <th>Max Score</th>
+                        <th>Grading Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($assessments as $assessment)
+                    <tr>
+                        <td>
+                            <div style="font-weight: 600; color: #111827;">{{ $assessment->title ?? $assessment->name }}</div>
+                        </td>
+                        <td>{{ $assessment->type ?? 'General' }}</td>
+                        <td>{{ $assessment->max_score ?? 100 }}</td>
+                        <td>
+                            @php
+                                $studentCount = $classSection->students->count();
+                                $gradedCount = $assessment->graded_count ?? 0;
+                                $percentage = $studentCount > 0 ? ($gradedCount / $studentCount) * 100 : 0;
+                            @endphp
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div style="flex: 1; height: 6px; background: #e5e7eb; border-radius: 3px; width: 100px;">
+                                    <div style="height: 100%; background: #4f46e5; border-radius: 3px; width: {{ $percentage }}%;"></div>
+                                </div>
+                                <span style="font-size: 0.8rem; color: #6b7280;">{{ $gradedCount }}/{{ $studentCount }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <a href="{{ route('teacher.gradebook.results', $assessment->id) }}" class="btn-primary" style="padding: 6px 12px; font-size: 0.85rem;">
+                                <i class="fas fa-pen"></i> Enter Marks
+                            </a>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: #6b7280; padding: 30px;">
+                            No assessments found for this subject. 
+                            <br><small>Please ask an administrator to create assessments.</small>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
-</x-app-layout>
+@endsection

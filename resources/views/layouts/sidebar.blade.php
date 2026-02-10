@@ -30,8 +30,27 @@
             </li>
             @endif
 
+            @if(auth()->check() && auth()->user()->role === 'admin')
+            <li class="{{ request()->is('admin/users*') ? 'active' : '' }}">
+                <a href="{{ route('admin.users.index') }}">
+                    <i class="fas fa-users"></i> <span>Users</span>
+                </a>
+            </li>
+            <li class="{{ request()->is('admin/subjects*') ? 'active' : '' }}">
+                <a href="{{ route('admin.subjects.index') }}">
+                    <i class="fas fa-book"></i> <span>Subjects</span>
+                </a>
+            </li>
+            @endif
+
             <li class="menu-header">System</li>
             
+            <li class="{{ request()->is('profile') ? 'active' : '' }}">
+                <a href="{{ route('profile.edit') }}">
+                    <i class="fas fa-user-cog"></i> <span>Profile Settings</span>
+                </a>
+            </li>
+
             <li>
                 <form method="POST" action="{{ route('logout') }}" id="logout-form">
                     @csrf

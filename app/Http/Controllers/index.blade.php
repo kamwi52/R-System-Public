@@ -29,15 +29,16 @@
                         </td>
                         <td>{{ $class->academicSession->name ?? 'N/A' }}</td>
                         <td>
-                            <a href="{{ route('classes.students', $class->id) }}" style="text-decoration: none;">
-                                <span style="background: #eff6ff; color: #1d4ed8; padding: 2px 8px; border-radius: 99px; font-size: 12px; font-weight: 600; cursor: pointer;">
-                                    {{ $class->students_count ?? 0 }} Students
-                                </span>
-                            </a>
+                            <span style="background: #eff6ff; color: #1d4ed8; padding: 2px 8px; border-radius: 99px; font-size: 12px; font-weight: 600;">
+                                {{ $class->students_count ?? 0 }} Students
+                            </span>
                         </td>
                         <td>
                             <a href="{{ action([App\Http\Controllers\ReportCardController::class, 'generateForClass'], $class->id) }}" class="action-btn" title="Generate Reports" target="_blank">
                                 <i class="fas fa-file-pdf"></i>
+                            </a>
+                            <a href="{{ route('classes.subjects', $class->id) }}" class="action-btn" title="Manage Subjects">
+                                <i class="fas fa-book"></i>
                             </a>
                             <a href="{{ url('/classes/' . $class->id . '/edit') }}" class="action-btn" title="Edit">
                                 <i class="fas fa-edit"></i>

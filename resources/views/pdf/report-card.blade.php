@@ -2,133 +2,111 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Report Card for {{ $student->name }}</title>
+    <title>Report Card</title>
     <style>
-        @page { margin: 25px; }
-        body { font-family: 'Helvetica', 'Arial', sans-serif; color: #333; font-size: 12px; }
-        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
-        .header h1 { margin: 0; font-size: 22px; text-transform: uppercase; }
-        .header h2 { margin: 5px 0; font-size: 16px; font-weight: normal; color: #555; }
-        .student-info { margin-bottom: 20px; line-height: 1.5; }
-        .student-info table { width: 100%; }
-        .student-info td { padding: 1px 0; }
-        h3 { font-size: 16px; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 25px; }
-        .content-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        .content-table th, .content-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        .content-table th { background-color: #f2f2f2; font-weight: bold; }
-        .summary-row td { font-weight: bold; background-color: #f9f9f9; }
-        .subject-header { background-color: #e9ecef; font-weight: bold; font-size: 14px; }
-        .page-break { page-break-after: always; }
-        .footer { position: fixed; bottom: 0px; left: 0px; right: 0px; height: 40px; text-align: center; font-size: 10px; color: #777; border-top: 1px solid #ccc; padding-top: 10px; }
+        body { font-family: sans-serif; color: #333; }
+        .container { width: 100%; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
+        .header h1 { margin: 0; font-size: 24px; text-transform: uppercase; }
+        .header p { margin: 5px 0; font-size: 14px; }
+        
+        .info-table { width: 100%; margin-bottom: 20px; }
+        .info-table td { padding: 5px; }
+        .label { font-weight: bold; width: 120px; }
+
+        .grades-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        .grades-table th, .grades-table td { border: 1px solid #999; padding: 8px; text-align: center; font-size: 12px; }
+        .grades-table th { background-color: #f0f0f0; text-transform: uppercase; }
+        .grades-table .subject-col { text-align: left; font-weight: bold; }
+
+        .footer { margin-top: 50px; }
+        .signature-box { float: left; width: 40%; border-top: 1px solid #333; padding-top: 10px; text-align: center; font-size: 12px; }
+        .signature-box.right { float: right; }
+        
+        .clearfix::after { content: ""; clear: both; display: table; }
     </style>
 </head>
 <body>
+    <div class="container">
+        <div class="header">
+            <h1>School Name High School</h1>
+            <p>123 Education Lane, Knowledge City</p>
+            <p><strong>Student Report Card</strong></p>
+        </div>
 
-    <div class="header">
-        <h1>Linda Secondary School</h1>
-        <h2>Academic Report Card - {{ $academicSession }}</h2>
-    </div>
-
-    <div class="student-info">
-        <table>
+        <table class="info-table">
             <tr>
-                <td style="width: 15%;"><strong>Student Name:</strong></td>
-                <td style="width: 35%;">{{ $student->name }}</td>
-                <td style="width: 15%;"><strong>Student ID:</strong></td>
-                <td style="width: 35%;">{{ $student->id }}</td>
+                <td class="label">Student Name:</td>
+                <td>{{ $student->name }}</td>
+                <td class="label">Session:</td>
+                <td>{{ $session->name ?? 'N/A' }}</td>
             </tr>
             <tr>
-                <td><strong>Class:</strong></td>
-                <td>{{ $student->classSection->name ?? 'N/A' }}</td>
-                <td><strong>Date Issued:</strong></td>
-                <td>{{ now()->format('F j, Y') }}</td>
+                <td class="label">Student ID:</td>
+                <td>{{ $student->id }}</td>
+                <td class="label">Term:</td>
+                <td>{{ $term->name }}</td>
+            </tr>
+            <tr>
+                <td class="label">Class:</td>
+                <td>{{ $classSection->name }}</td>
+                <td class="label">Date:</td>
+                <td>{{ now()->format('d M, Y') }}</td>
             </tr>
         </table>
-    </div>
 
-    <h3>Academic Performance Summary</h3>
-    <table class="content-table">
-        <thead>
-            <tr>
-                <th style="width: 50%;">Subject</th>
-                <th style="width: 25%;">Final Grade / Average</th>
-                <th style="width: 25%;">Remark</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse ($reportData as $subjectName => $data)
-                <tr class="summary-row">
-                    <td>{{ $subjectName }}</td>
-                    <td>{{ number_format($data['final_grade'], 2) }}</td>
-                    <td>
-                        @php
-                            $grade = $data['final_grade'];
-                            if ($grade >= 90) { echo 'Outstanding'; }
-                            elseif ($grade >= 80) { echo 'Excellent'; }
-                            elseif ($grade >= 70) { echo 'Very Good'; }
-                            elseif ($grade >= 60) { echo 'Good'; }
-                            elseif ($grade >= 50) { echo 'Satisfactory'; }
-                            else { echo 'Needs Improvement'; }
-                        @endphp
+        <table class="grades-table">
+            <thead>
+                <tr>
+                    <th class="subject-col">Subject</th>
+                    <th>Assessments Breakdown</th>
+                    <th>Total Score</th>
+                    <th>Max Score</th>
+                    <th>Percentage</th>
+                    <th>Grade</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($reportData as $data)
+                <tr>
+                    <td class="subject-col">
+                        {{ $data['subject'] }}
+                        <br><span style="font-weight: normal; font-size: 10px; color: #555;">{{ $data['code'] }}</span>
                     </td>
+                    <td style="text-align: left;">
+                        @foreach($data['assessments'] as $assessment)
+                            <div style="font-size: 10px;">
+                                {{ $assessment['name'] }}: <strong>{{ $assessment['score'] }}</strong> / {{ $assessment['max'] }}
+                            </div>
+                        @endforeach
+                    </td>
+                    <td>{{ $data['total_score'] }}</td>
+                    <td>{{ $data['max_score'] }}</td>
+                    <td>{{ number_format($data['percentage'], 1) }}%</td>
+                    <td style="font-weight: bold;">{{ $data['grade'] }}</td>
                 </tr>
-            @empty
-                <tr>
-                    <td colspan="3" style="text-align: center;">No summary data available.</td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
+                @endforeach
+            </tbody>
+        </table>
 
-    {{-- ==================================================================== --}}
-    {{-- === NEW: DETAILED BREAKDOWN TABLE === --}}
-    {{-- ==================================================================== --}}
+        <div style="margin-bottom: 40px;">
+            <strong>Remarks:</strong>
+            <div style="border-bottom: 1px solid #ccc; height: 20px; margin-top: 5px;"></div>
+            <div style="border-bottom: 1px solid #ccc; height: 20px; margin-top: 5px;"></div>
+        </div>
 
-    <h3>Detailed Assessment Breakdown</h3>
-    <table class="content-table">
-        <thead>
-            <tr>
-                <th>Subject</th>
-                <th>Assessment Name</th>
-                <th>Assessment Type / Title</th>
-                <th>Score</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse ($reportData as $subjectName => $data)
-                {{-- Create a header row for each subject --}}
-                <tr>
-                    <td colspan="4" class="subject-header">{{ $subjectName }}</td>
-                </tr>
-                {{-- Loop through each result within that subject's data --}}
-                @forelse ($data['results'] as $result)
-                    <tr>
-                        <td>{{-- This cell is intentionally empty for grouping --}}</td>
-                        <td>{{ $result->assessment->name ?? 'N/A' }}</td>
-                        <td>
-                            {{-- Use the 'assignment' relationship we loaded. --}}
-                            {{-- Check for 'title' or 'name' on the assignment model. --}}
-                            {{ $result->assessment->assignment->title ?? ($result->assessment->assignment->name ?? 'General') }}
-                        </td>
-                        <td>{{ $result->score ?? 'N/A' }}</td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td>{{-- Empty cell --}}</td>
-                        <td colspan="3">No detailed results recorded for this subject.</td>
-                    </tr>
-                @endforelse
-            @empty
-                <tr>
-                    <td colspan="4" style="text-align: center;">No academic results have been recorded for this period.</td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
-
-    <div class="footer">
-        <p>This is an official document generated by the R-System. | Principal's Signature: _________________________</p>
+        <div class="footer clearfix">
+            <div class="signature-box">
+                Class Teacher's Signature
+            </div>
+            <div class="signature-box right">
+                Principal's Signature
+            </div>
+        </div>
+        
+        <div style="text-align: center; font-size: 10px; color: #999; margin-top: 30px;">
+            This report card was generated electronically by R-System.
+        </div>
     </div>
-
 </body>
 </html>

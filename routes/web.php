@@ -10,6 +10,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportCardController;
 use App\Http\Controllers\ClassController;
+use App\Http\Controllers\DashboardController as MainDashboardController;
 
 // Admin Controllers
 use App\Http\Controllers\Admin\DashboardController;
@@ -49,7 +50,7 @@ Route::get('/', function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
-    Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [MainDashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -66,6 +67,16 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/reports/download-generated-file', [ReportingController::class, 'downloadGeneratedFile'])->name('reports.download.generated');
 
+    // Class Management Routes
+    Route::resource('classes', ClassController::class);
+    Route::get('classes/{class}/students', [ClassController::class, 'students'])->name('classes.students');
+    Route::get('classes/{class}/enroll', [ClassController::class, 'enroll'])->name('classes.enroll');
+    Route::post('classes/{class}/enroll', [ClassController::class, 'storeEnrollment'])->name('classes.enroll.store');
+    Route::delete('classes/{class}/students/{student}', [ClassController::class, 'removeStudent'])->name('classes.students.remove');
+    Route::get('classes/{class}/subjects', [ClassController::class, 'subjects'])->name('classes.subjects');
+    Route::post('classes/{class}/subjects', [ClassController::class, 'storeSubject'])->name('classes.subjects.store');
+    Route::delete('classes/{class}/subjects/{subject}', [ClassController::class, 'removeSubject'])->name('classes.subjects.remove');
+
 });
 
 // Admin Routes
@@ -74,10 +85,6 @@ Route::middleware(['auth', 'is.admin'])->prefix('admin')->name('admin.')->group(
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     
     // Shared Class Management Routes
-    Route::delete('classes/{class}/students/{student}', [ClassController::class, 'removeStudent'])->name('classes.students.remove');
-    Route::get('classes/{class}/students', [ClassController::class, 'students'])->name('classes.students');
-    Route::post('classes/{class}/subjects', [ClassController::class, 'storeSubject'])->name('classes.subjects.store');
-    Route::delete('classes/{class}/subjects/{subject}', [ClassController::class, 'removeSubject'])->name('classes.subjects.remove');
 
     // User Management
     Route::get('/users/import', [UserController::class, 'showImportForm'])->name('users.import.show');

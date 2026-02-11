@@ -64,12 +64,7 @@ Route::middleware('auth')->group(function () {
         return redirect()->back();
     })->name('notifications.show');
 
-    Route::get('/reports/download-generated-file', function(Request $request) {
-        if (!$request->hasValidSignature()) { abort(401, 'Invalid or expired download link.'); }
-        $filePath = $request->query('filename');
-        if (Storage::disk('private')->exists($filePath)) { return Storage::disk('private')->download($filePath); }
-        abort(404, 'File not found or has been removed.');
-    })->name('reports.download.generated');
+    Route::get('/reports/download-generated-file', [ReportingController::class, 'downloadGeneratedFile'])->name('reports.download.generated');
 
 });
 
@@ -79,15 +74,11 @@ Route::middleware(['auth', 'is.admin'])->prefix('admin')->name('admin.')->group(
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     
     // Shared Class Management Routes
-    Route::get('classes/{class}/enroll', [ClassController::class, 'enroll'])->name('classes.enroll');
-    Route::post('classes/{class}/enroll', [ClassController::class, 'storeEnrollment'])->name('classes.enroll.store');
     Route::delete('classes/{class}/students/{student}', [ClassController::class, 'removeStudent'])->name('classes.students.remove');
     Route::get('classes/{class}/students', [ClassController::class, 'students'])->name('classes.students');
-    Route::get('classes/{class}/subjects', [ClassController::class, 'subjects'])->name('classes.subjects');
     Route::post('classes/{class}/subjects', [ClassController::class, 'storeSubject'])->name('classes.subjects.store');
     Route::delete('classes/{class}/subjects/{subject}', [ClassController::class, 'removeSubject'])->name('classes.subjects.remove');
-    Route::resource('classes', ClassController::class);
-});
+
     // User Management
     Route::get('/users/import', [UserController::class, 'showImportForm'])->name('users.import.show');
     Route::post('/users/import', [UserController::class, 'handleImport'])->name('users.import.handle');

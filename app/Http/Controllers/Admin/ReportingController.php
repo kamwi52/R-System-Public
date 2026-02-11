@@ -9,6 +9,7 @@ use App\Models\ClassSection;
 use App\Models\Result;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportingController extends Controller
 {
@@ -79,4 +80,22 @@ class ReportingController extends Controller
 
         return Storage::disk('private')->download($filename);
     }
+
+    /**
+     * Securely download a generated report file.
+     * This function handles the signed URL request for report downloads.
+     */
+    public function downloadGeneratedFile(Request $request): StreamedResponse
+    {
+        if (! $request->hasValidSignature()) {
+            abort(401, 'Invalid or expired download link.');
+        }
+        $filePath = $request->query('filename');
+        if (Storage::disk('private')->exists($filePath)) {
+            return Storage::disk('private')->download($filePath);
+        }
+
+        abort(404, 'File not found or has been removed.');
+    }
+
 }

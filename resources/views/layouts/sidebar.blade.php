@@ -23,8 +23,8 @@
             @endif
 
             @if(auth()->check() && (auth()->user()->role === 'teacher' || auth()->user()->role === 'admin'))
-            <li class="{{ request()->is('classes*') ? 'active' : '' }}">
-                <a href="{{ url('/classes') }}">
+            <li class="{{ request()->is('classes*') || request()->is('admin/classes*') ? 'active' : '' }}">
+                <a href="{{ auth()->user()->role === 'admin' ? route('admin.classes.index') : url('/classes') }}">
                     <i class="fas fa-chalkboard-teacher"></i> <span>Class Management</span>
                 </a>
             </li>

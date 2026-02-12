@@ -239,3 +239,134 @@ body {
     font-weight: 700;
     color: var(--text-main);
 }
+
+/* Container & Card */
+.management-card {
+    background-color: #1a2234; /* Darker blue-grey */
+    border-radius: 12px;
+    padding: 2rem;
+    border: 1px dashed rgba(255,255,255,0.1);
+    margin: 20px;
+}
+
+.management-title {
+    color: #ffffff;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+/* Header & Buttons */
+.card-header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.btn-import, .btn-add {
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    margin-left: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-import { background-color: #2563eb; color: white; } /* Blue */
+.btn-add { background-color: #10b981; color: white; }    /* Green */
+
+/* Search Bar (Matching your Classes screenshot) */
+.search-section {
+    margin-bottom: 1.5rem;
+}
+
+.search-input-wrapper {
+    position: relative;
+    max-width: 500px;
+}
+
+.search-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+}
+
+.search-field {
+    width: 100%;
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 12px 12px 12px 45px;
+    color: white;
+}
+
+/* Table Styling */
+.custom-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 8px;
+}
+
+.custom-table th {
+    background-color: #2e3a4e;
+    color: #94a3b8;
+    padding: 12px;
+    text-align: left;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    border-radius: 4px;
+}
+
+.custom-table td {
+    background-color: transparent;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    padding: 15px 12px;
+    color: #e2e8f0;
+}
+
+/* Action Icons */
+.edit-link { color: #38bdf8; margin-right: 15px; }
+.delete-link { color: #f87171; background: none; border: none; cursor: pointer; }
+
+/* Pagination Styling */
+.pagination-container {
+    padding-top: 1.5rem;
+    margin-top: 1rem;
+    border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.management-card nav[role="navigation"] p {
+    color: #94a3b8 !important; /* "Showing x to y" text */
+    font-size: 0.875rem;
+}
+
+.management-card nav[role="navigation"] .shadow-sm {
+    box-shadow: none !important;
+}
+
+/* Pagination Buttons (Default State) */
+.management-card nav[role="navigation"] a,
+.management-card nav[role="navigation"] span[aria-disabled="true"] span,
+.management-card nav[role="navigation"] span[aria-current="page"] span {
+    background-color: #1e293b !important;
+    border-color: rgba(255,255,255,0.1) !important;
+    color: #e2e8f0 !important;
+}
+
+/* Hover State */
+.management-card nav[role="navigation"] a:hover {
+    background-color: #2e3a4e !important;
+    color: #ffffff !important;
+}
+
+/* Active Page State */
+.management-card nav[role="navigation"] span[aria-current="page"] span {
+    background-color: #2563eb !important; /* Blue */
+    border-color: #2563eb !important;
+    color: #ffffff !important;
+    z-index: 1;
+}

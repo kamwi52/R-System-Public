@@ -10,7 +10,7 @@
     <!-- Google Fonts: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-@vite(['resources/css/app.css', 'resources/css/dashboard.css', 'resources/js/app.js'])
+@vite(['resources/css/app.css', 'resources/css/dashboard.css', 'resources/css/lssms.css', 'resources/js/app.js'])
 
 </head>
 <body>

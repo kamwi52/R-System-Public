@@ -1,10 +1,10 @@
-<x-app-layout>
+@extends('layouts.app')
+
+@section('content')
     {{-- Page Header --}}
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Import Classes') }}
-        </h2>
-    </x-slot>
+    
+        
+    
 
     {{-- Main Content --}}
     <div class="py-12">
@@ -63,4 +63,5 @@
             </div>
         </div>
     </div>
-</x-app-layout>
+@endsection
+

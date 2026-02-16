@@ -3,53 +3,6 @@
 @section('title', 'Dashboard')
 
 @section('content')
-<style>
-    /* LSSMS Dashboard Styles */
-    .lssms-card {
-        background-color: #1e293b;
-        border: 1px solid rgba(255,255,255,0.05);
-        border-radius: 12px;
-        background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%);
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        padding: 24px;
-        display: flex;
-        align-items: center;
-        gap: 20px;
-        transition: transform 0.2s;
-    }
-    .lssms-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    }
-    .icon-wrapper {
-        width: 56px;
-        height: 56px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-    }
-    .icon-blue { background: rgba(56, 189, 248, 0.1); color: #38bdf8; }
-    .icon-green { background: rgba(52, 211, 153, 0.1); color: #34d399; }
-    .icon-purple { background: rgba(139, 92, 246, 0.1); color: #a78bfa; }
-    .icon-orange { background: rgba(251, 146, 60, 0.1); color: #fb923c; }
-    
-    .stat-content h3 {
-        color: #94a3b8;
-        font-size: 0.875rem;
-        font-weight: 500;
-        margin: 0 0 4px 0;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-    .stat-content .number {
-        color: #f8fafc;
-        font-size: 1.75rem;
-        font-weight: 700;
-        margin: 0;
-    }
-</style>
     <div class="dashboard-welcome" style="margin-bottom: 30px;">
         <h1 style="color: #f8fafc; font-size: 2rem; font-weight: 700; margin-bottom: 10px;">Linda Secondary School Management System</h1>
         <p style="color: #94a3b8; font-size: 1.1rem;">Welcome back, {{ Auth::user()->name }}!</p>

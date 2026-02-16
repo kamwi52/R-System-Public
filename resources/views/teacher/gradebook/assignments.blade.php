@@ -1,11 +1,6 @@
+@extends('layouts.app')
 
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Assignments: ') }} {{ $subject->name }} ({{ $classSection->name }})
-        </h2>
-    </x-slot>
-
+@section('content')
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
@@ -33,7 +28,7 @@
                                         <tr>
                                             <td class="px-6 py-4 whitespace-nowrap">{{ $assignment->title }}</td>
                                             <td class="px-6 py-4 whitespace-nowrap">{{ $assignment->due_date->format('M j, Y') }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap">{{ $assignment->max_points }}</td>
+                                            <td class.blade.php"
                                             <td class="px-6 py-4 whitespace-nowrap text-right">
                                                 <a href="{{ route('teacher.gradebook.results.show', $assignment) }}" 
                                                    class="text-indigo-600 hover:text-indigo-900 mr-3">
@@ -57,4 +52,4 @@
             </div>
         </div>
     </div>
-</x-app-layout>
+@endsection

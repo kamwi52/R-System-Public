@@ -67,16 +67,11 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/reports/download-generated-file', [ReportingController::class, 'downloadGeneratedFile'])->name('reports.download.generated');
 
-    // Class Management Routes
-    Route::resource('classes', ClassController::class);
-    Route::get('classes/{class}/students', [ClassController::class, 'students'])->name('classes.students');
-    Route::get('classes/{class}/enroll', [ClassController::class, 'enroll'])->name('classes.enroll');
-    Route::post('classes/{class}/enroll', [ClassController::class, 'storeEnrollment'])->name('classes.enroll.store');
-    Route::delete('classes/{class}/students/{student}', [ClassController::class, 'removeStudent'])->name('classes.students.remove');
-    Route::get('classes/{class}/subjects', [ClassController::class, 'subjects'])->name('classes.subjects');
-    Route::post('classes/{class}/subjects', [ClassController::class, 'storeSubject'])->name('classes.subjects.store');
-    Route::delete('classes/{class}/subjects/{subject}', [ClassController::class, 'removeSubject'])->name('classes.subjects.remove');
+});
 
+// Fix for 404 on /classes: Redirect to the correct admin route
+Route::middleware(['auth'])->get('/classes', function () {
+    return redirect()->route('admin.classes.index');
 });
 
 // Admin Routes

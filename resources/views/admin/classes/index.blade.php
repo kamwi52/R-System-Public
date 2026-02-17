@@ -1,40 +1,27 @@
-<x-app-flowbite-layout>
-    {{-- Page Header --}}
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Manage Classes') }}
-        </h2>
-    </x-slot>
-
-    {{-- Main Content --}}
-    <div class="py-2">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            
-            {{-- Top Bar with Search and Add Button --}}
-            <div class="flex flex-col sm:flex-row items-center justify-between mb-4">
-                {{-- Search Form --}}
-                <form method="GET" action="{{ route('admin.classes.index') }}" class="w-full sm:w-1/2">
-                    <label for="search" class="sr-only">Search</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                            <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
-                            </svg>
-                        </div>
-                        <input type="text" id="search" name="search" class="block w-full p-2.5 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Search by Class Name..." value="{{ request('search') }}">
-                    </div>
-                </form>
-                {{-- Action Buttons --}}
-                <div class="flex items-center mt-3 sm:mt-0 sm:ml-4 space-x-2">
-                    {{-- === MODIFIED SECTION: IMPORT BUTTON ADDED === --}}
-                    <a href="{{ route('admin.classes.import.show') }}" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:ring-blue-800">
-                        Import Classes
-                    </a>
-                    <a href="{{ route('admin.classes.create') }}" class="focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5">
-                        Add New Class
-                    </a>
-                </div>
+@extends('layouts.app')
+@section('title', 'Manage Classes')
+@section('content')
+<div class="content-container">
+    <div class="management-card">
+        <div class="card-header-actions">
+            <h2 class="management-title">Manage Classes</h2>
+            <div class="header-btns">
+                <a href="{{ route('admin.classes.import.show') }}" class="btn-secondary">
+                    <i class="fas fa-file-import"></i> Import
+                </a>
+                <a href="{{ route('admin.classes.create') }}" class="btn-primary">
+                    <i class="fas fa-plus"></i> Add New Class
+                </a>
             </div>
+        </div>
+
+        <!-- Search Section -->
+        <div class="search-section">
+            <form method="GET" action="{{ route('admin.classes.index') }}">
+                <div class="search-input-wrapper">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" name="search" placeholder="Search by Class Name..." class="search-field" value="{{ request('search') }}">
+                </div>
 
             {{-- Display Messages --}}
             <x-success-message />
@@ -94,7 +81,6 @@
                                     No classes found.
                                 </td>
                             </tr>
-                        @endforelse
                     </tbody>
                 </table>
             </div>
@@ -105,6 +91,62 @@
                 {{ $classes->withQueryString()->links() }}
             </div>
 
+        <div style="overflow-x: auto;">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th width="10%">CLASS</th>
+                        <th width="15%">SESSION</th>
+                        <th width="10%">ENROLLED</th>
+                        <th width="45%">SUBJECTS & TEACHERS</th>
+                        <th width="20%" style="text-align: right;">ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($classes as $class)
+                    <tr>
+                        <td class="class-name-cell">{{ $class->name }}</td>
+                        <td class="text-muted">{{ $class->academicSession->name ?? 'N/A' }}</td>
+                        <td>
+                            <span class="count-badge">{{ $class->students_count }}</span>
+                        </td>
+                        <td>
+                            <div class="subject-tag-cloud">
+                                @forelse($class->subjects as $subject)
+                                    <span class="subject-pill" title="{{ $subject->pivot->teacher_id ? 'Teacher Assigned' : 'No Teacher' }}">
+                                        {{ $subject->name }}
+                                    </span>
+                                @empty
+                                    <span class="text-dimmed">No subjects assigned</span>
+                                @endforelse
+                            </div>
+                        </td>
+                        <td style="text-align: right;">
+                            <div class="action-group">
+                                <a href="{{ route('admin.classes.edit', $class) }}" title="Edit & Assign" class="act-btn btn-blue"><i class="fas fa-edit"></i></a>
+                                <a href="{{ route('admin.classes.enroll.index', $class) }}" title="Enroll Students" class="act-btn btn-green"><i class="fas fa-user-plus"></i></a>
+                                <form action="{{ route('admin.classes.destroy', $class) }}" method="POST" onsubmit="return confirm('Delete this class?');" style="display:inline;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" title="Delete" class="act-btn btn-red"><i class="fas fa-trash"></i></button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 30px; color: #94a3b8;">No classes found.</td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination Spacing -->
+        <div style="margin-top: 20px; color: #94a3b8;">
+            {{ $classes->withQueryString()->links() }}
         </div>
     </div>
 </x-app-flowbite-layout>
+</div>
+@endsection

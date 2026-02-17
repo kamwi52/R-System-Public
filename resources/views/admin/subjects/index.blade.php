@@ -1,56 +1,64 @@
 @extends('layouts.app')
 @section('title', 'Subject Management')
 @section('content')
-<div class="card">
-    <div class="card-header">
-        <h3>All Subjects</h3>
-        <a href="{{ route('admin.subjects.create') }}" class="btn-primary">
-            <i class="fas fa-plus"></i> Add Subject
-        </a>
-    </div>
-    <div class="table-responsive">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Code</th>
-                    <th>Teachers Assigned</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($subjects as $subject)
-                <tr>
-                    <td>
-                        <div style="font-weight: 600; color: #111827;">{{ $subject->name }}</div>
-                    </td>
-                    <td>{{ $subject->code }}</td>
-                    <td>
-                        <span style="background: #eff6ff; color: #1d4ed8; padding: 2px 8px; border-radius: 99px; font-size: 12px; font-weight: 600;">
-                            {{ $subject->teachers_count }} Teachers
-                        </span>
-                    </td>
-                    <td>
-                        <a href="{{ route('admin.subjects.edit', $subject->id) }}" class="action-btn" title="Edit">
-                            <i class="fas fa-edit"></i>
-                        </a>
-                        <form action="{{ route('admin.subjects.destroy', $subject->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete this subject?');">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="action-btn" title="Delete" style="background:none;border:none;cursor:pointer;color:#ef4444;">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-                @empty
-                <tr><td colspan="4" style="text-align: center; padding: 30px;">No subjects found.</td></tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-    <div style="padding: 20px;">
-        {{ $subjects->links() }}
+<div class="content-container">
+    <div class="management-card">
+        
+        <!-- Header Row -->
+        <div class="card-header-actions">
+            <h2 class="management-title">All Subjects</h2>
+            <div class="header-btns">
+                <a href="{{ route('admin.subjects.create') }}" class="btn-primary">
+                    <i class="fas fa-plus"></i> Add Subject
+                </a>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div style="overflow-x: auto;">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Subject Name</th>
+                        <th>Code</th>
+                        <th>Teachers Assigned</th>
+                        <th style="text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($subjects as $subject)
+                    <tr>
+                        <td class="class-name-cell">{{ $subject->name }}</td>
+                        <td><code style="color: #fbbf24;">{{ $subject->code }}</code></td>
+                        <td>
+                            <span class="teacher-badge">
+                                {{ $subject->teachers_count }} Teachers
+                            </span>
+                        </td>
+                        <td style="text-align: right;">
+                            <div class="action-group">
+                                <a href="{{ route('admin.subjects.edit', $subject->id) }}" class="act-btn btn-blue" title="Edit"><i class="fas fa-edit"></i></a>
+                                <form action="{{ route('admin.subjects.destroy', $subject->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete this subject?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="act-btn btn-red" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr><td colspan="4" style="text-align: center; padding: 30px; color: #94a3b8;">No subjects found.</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Spacing -->
+        <div style="margin-top: 20px; color: #94a3b8;">
+            {{ $subjects->links() }}
+        </div>
     </div>
 </div>
 @endsection
